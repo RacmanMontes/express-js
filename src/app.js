@@ -29,7 +29,9 @@ const corsOptions = {
         'http://localhost:8200',  // Alternative Ionic port
         'http://127.0.0.1:3000', 
         'http://127.0.0.1:5173',
-        'http://127.0.0.1:8100'
+        'http://127.0.0.1:8100',
+        // Add your Render domain for production
+        'https://express-js-dtzo.onrender.com'
     ],
     credentials: true,
     optionsSuccessStatus: 200,
@@ -47,7 +49,9 @@ app.use((req, res, next) => {
         'http://localhost:8200',
         'http://127.0.0.1:3000', 
         'http://127.0.0.1:5173',
-        'http://127.0.0.1:8100'
+        'http://127.0.0.1:8100',
+        // Add your Render domain for production
+        'https://express-js-dtzo.onrender.com'
     ];
     const origin = req.headers.origin;
     
@@ -85,7 +89,9 @@ app.use('/uploads', (req, res, next) => {
         'http://localhost:8200',
         'http://127.0.0.1:3000', 
         'http://127.0.0.1:5173',
-        'http://127.0.0.1:8100'
+        'http://127.0.0.1:8100',
+        // Add your Render domain for production
+        'https://express-js-dtzo.onrender.com'
     ];
     const origin = req.headers.origin;
     
@@ -132,15 +138,43 @@ app.get('/api/test', (req, res) => {
     res.json({ message: 'API is working!' });
 });
 
+// ============================================
+// SERVE ADMIN FRONTEND (ADD THIS SECTION)
+// ============================================
+
+// Serve static files from the 'admin' folder (built Vite app)
+app.use('/admin', express.static(path.join(__dirname, '../admin')));
+
+// Redirect root to admin
+app.get('/', (req, res) => {
+    res.redirect('/admin');
+});
+
+// Handle React Router routes (for direct navigation to /admin/anything)
+app.get('/admin/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../admin/index.html'));
+});
+
+// ============================================
+// ERROR HANDLERS
+// ============================================
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-// 404 handler
+// 404 handler - Note: This will now only catch non-API routes
+// because the admin frontend routes are handled above
 app.use((req, res) => {
-    res.status(404).json({ message: 'Route not found' });
+    // Check if the request is for an API route
+    if (req.path.startsWith('/api')) {
+        res.status(404).json({ message: 'API route not found' });
+    } else {
+        // For non-API routes, serve the admin frontend
+        res.sendFile(path.join(__dirname, '../admin/index.html'));
+    }
 });
 
 module.exports = app;
