@@ -20,17 +20,16 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false,
 }));
 
-// Configure CORS properly - ADD IONIC PORT 8100
+// Configure CORS properly
 const corsOptions = {
     origin: [
         'http://localhost:3000', 
         'http://localhost:5173', 
-        'http://localhost:8100',  // ADD IONIC DEV SERVER
-        'http://localhost:8200',  // Alternative Ionic port
+        'http://localhost:8100',
+        'http://localhost:8200',
         'http://127.0.0.1:3000', 
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8100',
-        // Add your Render domain for production
         'https://express-js-dtzo.onrender.com'
     ],
     credentials: true,
@@ -40,17 +39,16 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Add CORS headers for all responses - ADD IONIC PORT 8100
+// Add CORS headers for all responses
 app.use((req, res, next) => {
     const allowedOrigins = [
         'http://localhost:3000', 
         'http://localhost:5173', 
-        'http://localhost:8100',  // ADD IONIC DEV SERVER
+        'http://localhost:8100',
         'http://localhost:8200',
         'http://127.0.0.1:3000', 
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8100',
-        // Add your Render domain for production
         'https://express-js-dtzo.onrender.com'
     ];
     const origin = req.headers.origin;
@@ -90,7 +88,6 @@ app.use('/uploads', (req, res, next) => {
         'http://127.0.0.1:3000', 
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8100',
-        // Add your Render domain for production
         'https://express-js-dtzo.onrender.com'
     ];
     const origin = req.headers.origin;
@@ -114,7 +111,6 @@ app.use('/uploads', (req, res, next) => {
 // Serve static files (uploaded images)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
     setHeaders: (res, filePath, stat) => {
-        // Additional headers for images
         res.set('Cache-Control', 'public, max-age=31536000');
         res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     }
@@ -139,15 +135,18 @@ app.get('/api/test', (req, res) => {
 });
 
 // ============================================
-// SERVE ADMIN FRONTEND
+// SERVE BOTH FRONTENDS
 // ============================================
 
-// Serve static files from the 'admin' folder (built Vite app)
+// Serve customer frontend at root (/)
+app.use('/', express.static(path.join(__dirname, '../customer')));
+
+// Serve admin frontend at /admin
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
 
-// Redirect root to admin
-app.get('/', (req, res) => {
-    res.redirect('/admin');
+// Handle React Router for admin (any /admin/* route)
+app.get('/admin/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../admin/index.html'));
 });
 
 // ============================================
@@ -160,15 +159,15 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-// 404 handler - serves admin frontend for any non-API routes
+// 404 handler - serves customer frontend for any non-API routes
 app.use((req, res) => {
     // If it's an API route, return JSON 404
     if (req.path.startsWith('/api')) {
         res.status(404).json({ message: 'API route not found' });
     } else {
-        // For all other routes (including /admin/something), serve the admin app
-        // This handles React Router client-side routing
-        res.sendFile(path.join(__dirname, '../admin/index.html'));
+        // For all other routes (including customer routes), serve customer frontend
+        // This handles React Router client-side routing for customer
+        res.sendFile(path.join(__dirname, '../customer/index.html'));
     }
 });
 
