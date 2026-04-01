@@ -30,7 +30,9 @@ const corsOptions = {
         'http://127.0.0.1:3000', 
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8100',
-        'https://express-js-dtzo.onrender.com'
+        'https://express-js-dtzo.onrender.com',
+        // ADD CUSTOMER FRONTEND DOMAIN
+        'https://shoepee-customer.onrender.com'
     ],
     credentials: true,
     optionsSuccessStatus: 200,
@@ -49,7 +51,9 @@ app.use((req, res, next) => {
         'http://127.0.0.1:3000', 
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8100',
-        'https://express-js-dtzo.onrender.com'
+        'https://express-js-dtzo.onrender.com',
+        // ADD CUSTOMER FRONTEND DOMAIN
+        'https://shoepee-customer.onrender.com'
     ];
     const origin = req.headers.origin;
     
@@ -88,7 +92,9 @@ app.use('/uploads', (req, res, next) => {
         'http://127.0.0.1:3000', 
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8100',
-        'https://express-js-dtzo.onrender.com'
+        'https://express-js-dtzo.onrender.com',
+        // ADD CUSTOMER FRONTEND DOMAIN
+        'https://shoepee-customer.onrender.com'
     ];
     const origin = req.headers.origin;
     
