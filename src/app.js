@@ -139,7 +139,7 @@ app.get('/api/test', (req, res) => {
 });
 
 // ============================================
-// SERVE ADMIN FRONTEND (ADD THIS SECTION)
+// SERVE ADMIN FRONTEND
 // ============================================
 
 // Serve static files from the 'admin' folder (built Vite app)
@@ -148,11 +148,6 @@ app.use('/admin', express.static(path.join(__dirname, '../admin')));
 // Redirect root to admin
 app.get('/', (req, res) => {
     res.redirect('/admin');
-});
-
-// Handle React Router routes (for direct navigation to /admin/anything)
-app.get('/admin/*?', (req, res) => {
-    res.sendFile(path.join(__dirname, '../admin/index.html'));
 });
 
 // ============================================
@@ -165,14 +160,14 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-// 404 handler - Note: This will now only catch non-API routes
-// because the admin frontend routes are handled above
+// 404 handler - serves admin frontend for any non-API routes
 app.use((req, res) => {
-    // Check if the request is for an API route
+    // If it's an API route, return JSON 404
     if (req.path.startsWith('/api')) {
         res.status(404).json({ message: 'API route not found' });
     } else {
-        // For non-API routes, serve the admin frontend
+        // For all other routes (including /admin/something), serve the admin app
+        // This handles React Router client-side routing
         res.sendFile(path.join(__dirname, '../admin/index.html'));
     }
 });
