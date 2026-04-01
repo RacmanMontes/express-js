@@ -31,7 +31,6 @@ const corsOptions = {
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8100',
         'https://express-js-dtzo.onrender.com',
-        // ADD CUSTOMER FRONTEND DOMAIN
         'https://shoepee-customer.onrender.com'
     ],
     credentials: true,
@@ -52,7 +51,6 @@ app.use((req, res, next) => {
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8100',
         'https://express-js-dtzo.onrender.com',
-        // ADD CUSTOMER FRONTEND DOMAIN
         'https://shoepee-customer.onrender.com'
     ];
     const origin = req.headers.origin;
@@ -93,7 +91,6 @@ app.use('/uploads', (req, res, next) => {
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8100',
         'https://express-js-dtzo.onrender.com',
-        // ADD CUSTOMER FRONTEND DOMAIN
         'https://shoepee-customer.onrender.com'
     ];
     const origin = req.headers.origin;
@@ -149,11 +146,6 @@ app.use('/', express.static(path.join(__dirname, '../customer')));
 
 // Serve admin frontend at /admin
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
-
-// Handle React Router for admin (any /admin/* route)
-app.get('/admin/*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../admin/index.html'));
-});
 
 // ============================================
 // ERROR HANDLERS
