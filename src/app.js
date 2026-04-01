@@ -151,7 +151,7 @@ app.get('/', (req, res) => {
 });
 
 // Handle React Router routes (for direct navigation to /admin/anything)
-app.get('/admin/*', (req, res) => {
+app.get('/admin*', (req, res) => {
     res.sendFile(path.join(__dirname, '../admin/index.html'));
 });
 
