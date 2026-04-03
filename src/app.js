@@ -80,6 +80,30 @@ app.use('/api', limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ============================================
+// 1. API ROUTES (MOST SPECIFIC - FIRST)
+// ============================================
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api', uploadRoutes);
+
+// Health check
+app.get('/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Test endpoint
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'API is working!' });
+});
+
+// ============================================
+// 2. STATIC FILES (SPECIFIC PATHS - SECOND)
+// ============================================
+
 // Custom middleware for static files with CORS headers
 app.use('/uploads', (req, res, next) => {
     const allowedOrigins = [
@@ -114,31 +138,24 @@ app.use('/uploads', (req, res, next) => {
 // Serve static files (uploaded images)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
     setHeaders: (res, filePath, stat) => {
+        const ext = path.extname(filePath).toLowerCase();
+        // Set correct content type based on file extension
+        if (ext === '.jpg' || ext === '.jpeg') {
+            res.set('Content-Type', 'image/jpeg');
+        } else if (ext === '.png') {
+            res.set('Content-Type', 'image/png');
+        } else if (ext === '.gif') {
+            res.set('Content-Type', 'image/gif');
+        } else if (ext === '.webp') {
+            res.set('Content-Type', 'image/webp');
+        }
         res.set('Cache-Control', 'public, max-age=31536000');
         res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     }
 }));
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api', uploadRoutes);
-
-// Health check
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
-
-// Test endpoint
-app.get('/api/test', (req, res) => {
-    res.json({ message: 'API is working!' });
-});
-
 // ============================================
-// SERVE BOTH FRONTENDS
+// 3. FRONTEND APPS (CATCH-ALL - THIRD)
 // ============================================
 
 // Serve customer frontend at root (/)
@@ -148,7 +165,7 @@ app.use('/', express.static(path.join(__dirname, '../customer')));
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
 
 // ============================================
-// ERROR HANDLERS
+// 4. ERROR HANDLERS & 404 (LAST RESORT)
 // ============================================
 
 // Error handling middleware
@@ -162,9 +179,14 @@ app.use((req, res) => {
     // If it's an API route, return JSON 404
     if (req.path.startsWith('/api')) {
         res.status(404).json({ message: 'API route not found' });
-    } else {
-        // For all other routes (including customer routes), serve customer frontend
-        // This handles React Router client-side routing for customer
+    } 
+    // If it's an image request that wasn't found, return 404
+    else if (req.path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+        res.status(404).send('Image not found');
+    }
+    // For all other routes (including customer routes), serve customer frontend
+    // This handles React Router client-side routing for customer
+    else {
         res.sendFile(path.join(__dirname, '../customer/index.html'));
     }
 });
