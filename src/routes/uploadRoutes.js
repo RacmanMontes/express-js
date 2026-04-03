@@ -161,3 +161,65 @@ uploadRouter.post('/profile', protect, profileUpload.single('profile_image'), as
 router.use('/upload', uploadRouter);
 
 module.exports = router;
+
+
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer for product images
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadPath = path.join(__dirname, '../uploads/products');
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, 'product-' + uniqueSuffix + ext);
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only images are allowed'));
+        }
+    }
+});
+
+// Upload endpoint
+app.post('/api/upload/product-image', upload.single('product_image'), async (req, res) => {
+    try {
+        const { product_id } = req.body;
+        const file = req.file;
+        
+        if (!file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+        
+        const imageUrl = `https://express-js-dtzo.onrender.com/uploads/products/${file.filename}`;
+        
+        // Update database
+        const db = require('./database');
+        await db.query(
+            'UPDATE products SET image_urls = ? WHERE id = ?',
+            [JSON.stringify([imageUrl]), product_id]
+        );
+        
+        res.json({ 
+            success: true, 
+            imageUrl: imageUrl,
+            message: 'Image uploaded successfully' 
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});

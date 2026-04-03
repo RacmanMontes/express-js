@@ -1,133 +1,86 @@
-cat > ~/shoppingApp/test-api.html << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>API Test</title>
+    <title>Upload Product Images</title>
     <style>
-        body { font-family: Arial; padding: 20px; }
-        .endpoint { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
-        button { margin: 5px; padding: 8px 12px; cursor: pointer; }
-        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
-        input { padding: 5px; margin: 5px; width: 200px; }
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .product { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        img { max-width: 100px; margin-top: 10px; }
+        input[type="file"] { margin: 10px 0; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
     </style>
 </head>
 <body>
-    <h1>Shopping App API Test</h1>
-    
-    <div class="endpoint">
-        <h3>1. Register User</h3>
-        <input type="text" id="regEmail" placeholder="Email" value="test@example.com">
-        <input type="password" id="regPassword" placeholder="Password" value="password123">
-        <input type="text" id="regFirstName" placeholder="First Name" value="Test">
-        <input type="text" id="regLastName" placeholder="Last Name" value="User">
-        <button onclick="register()">Register</button>
-        <pre id="regResult"></pre>
-    </div>
-    
-    <div class="endpoint">
-        <h3>2. Login</h3>
-        <input type="text" id="loginEmail" placeholder="Email" value="test@example.com">
-        <input type="password" id="loginPassword" placeholder="Password" value="password123">
-        <button onclick="login()">Login</button>
-        <pre id="loginResult"></pre>
-    </div>
-    
-    <div class="endpoint">
-        <h3>3. Get Profile (Requires Token)</h3>
-        <input type="text" id="profileToken" placeholder="JWT Token" style="width: 400px">
-        <button onclick="getProfile()">Get Profile</button>
-        <pre id="profileResult"></pre>
-    </div>
-    
-    <div class="endpoint">
-        <h3>4. Get Products</h3>
-        <button onclick="getProducts()">Get All Products</button>
-        <pre id="productsResult"></pre>
-    </div>
-    
+    <h1>Upload Product Images</h1>
+    <div id="products"></div>
+
     <script>
-        const API_URL = 'http://localhost:5000/api';
+        const API_URL = 'https://express-js-dtzo.onrender.com/api';
         
-        async function register() {
-            const data = {
-                email: document.getElementById('regEmail').value,
-                password: document.getElementById('regPassword').value,
-                first_name: document.getElementById('regFirstName').value,
-                last_name: document.getElementById('regLastName').value
-            };
-            
-            try {
-                const response = await fetch(`${API_URL}/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                document.getElementById('regResult').innerText = JSON.stringify(result, null, 2);
-                if (result.token) {
-                    document.getElementById('profileToken').value = result.token;
-                }
-            } catch (error) {
-                document.getElementById('regResult').innerText = 'Error: ' + error.message;
-            }
+        async function loadProducts() {
+            const response = await fetch(`${API_URL}/products?limit=20`);
+            const data = await response.json();
+            displayProducts(data);
         }
         
-        async function login() {
-            const data = {
-                email: document.getElementById('loginEmail').value,
-                password: document.getElementById('loginPassword').value
-            };
-            
-            try {
-                const response = await fetch(`${API_URL}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                document.getElementById('loginResult').innerText = JSON.stringify(result, null, 2);
-                if (result.token) {
-                    document.getElementById('profileToken').value = result.token;
-                }
-            } catch (error) {
-                document.getElementById('loginResult').innerText = 'Error: ' + error.message;
-            }
+        function displayProducts(products) {
+            const container = document.getElementById('products');
+            container.innerHTML = products.map(product => `
+                <div class="product">
+                    <h3>${product.name}</h3>
+                    <p>ID: ${product.id}</p>
+                    <div id="preview-${product.id}">
+                        ${product.image_urls?.[0] ? `<img src="${product.image_urls[0]}" onerror="this.src='https://placehold.co/300x300?text=No+Image'">` : '<p>No image</p>'}
+                    </div>
+                    <input type="file" id="file-${product.id}" accept="image/*">
+                    <button onclick="uploadImage(${product.id})">Upload Image</button>
+                    <div id="status-${product.id}"></div>
+                </div>
+            `).join('');
         }
         
-        async function getProfile() {
-            const token = document.getElementById('profileToken').value;
-            if (!token) {
-                document.getElementById('profileResult').innerText = 'Please enter a token first';
+        async function uploadImage(productId) {
+            const fileInput = document.getElementById(`file-${productId}`);
+            const file = fileInput.files[0];
+            const statusDiv = document.getElementById(`status-${productId}`);
+            
+            if (!file) {
+                statusDiv.innerHTML = '<span class="error">Please select a file</span>';
                 return;
             }
             
+            statusDiv.innerHTML = '<span>Uploading...</span>';
+            
+            const formData = new FormData();
+            formData.append('product_image', file);
+            formData.append('product_id', productId);
+            
             try {
-                const response = await fetch(`${API_URL}/auth/profile`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_URL}/upload/product-image`, {
+                    method: 'POST',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                    body: formData
                 });
+                
                 const result = await response.json();
-                document.getElementById('profileResult').innerText = JSON.stringify(result, null, 2);
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `<span class="success">✅ Uploaded! URL: ${result.imageUrl}</span>`;
+                    // Update preview
+                    const previewDiv = document.getElementById(`preview-${productId}`);
+                    previewDiv.innerHTML = `<img src="${result.imageUrl}">`;
+                } else {
+                    statusDiv.innerHTML = `<span class="error">❌ Error: ${result.message}</span>`;
+                }
             } catch (error) {
-                document.getElementById('profileResult').innerText = 'Error: ' + error.message;
+                statusDiv.innerHTML = `<span class="error">❌ Upload failed: ${error.message}</span>`;
             }
         }
         
-        async function getProducts() {
-            try {
-                const response = await fetch(`${API_URL}/products`);
-                const result = await response.json();
-                document.getElementById('productsResult').innerText = JSON.stringify(result, null, 2);
-            } catch (error) {
-                document.getElementById('productsResult').innerText = 'Error: ' + error.message;
-            }
-        }
+        loadProducts();
     </script>
 </body>
 </html>
-EOF
-
-# Open in browser
-firefox ~/shoppingApp/test-api.html
-# or
-chromium-browser ~/shoppingApp/test-api.html
