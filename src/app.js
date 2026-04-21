@@ -43,6 +43,7 @@ app.use(cors(corsOptions));
 // Add CORS headers for all responses
 app.use((req, res, next) => {
     const allowedOrigins = [
+        'http://localhost', 
         'http://localhost:3000', 
         'http://localhost:5173', 
         'http://localhost:8100',
