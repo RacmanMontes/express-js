@@ -23,6 +23,7 @@ app.use(helmet({
 // Configure CORS properly
 const corsOptions = {
     origin: [
+        'http://localhost', 
         'http://localhost:3000', 
         'http://localhost:5173', 
         'http://localhost:8100',
