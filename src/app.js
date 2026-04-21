@@ -109,6 +109,7 @@ app.get('/api/test', (req, res) => {
 // Custom middleware for static files with CORS headers
 app.use('/uploads', (req, res, next) => {
     const allowedOrigins = [
+        'http://localhost', 
         'http://localhost:3000', 
         'http://localhost:5173', 
         'http://localhost:8100',
