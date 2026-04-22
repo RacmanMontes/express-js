@@ -25,6 +25,7 @@ const corsOptions = {
     origin: [
         'http://localhost',
         'https://localhost',
+        'http://localhost:8101',
         'http://localhost:3000', 
         'http://localhost:5173', 
         'http://localhost:8100',
@@ -47,6 +48,7 @@ app.use((req, res, next) => {
     const allowedOrigins = [
         'http://localhost',
          'https://localhost',
+        'http://localhost:8101',
         'http://localhost:3000', 
         'http://localhost:5173', 
         'http://localhost:8100',
@@ -113,6 +115,7 @@ app.use('/uploads', (req, res, next) => {
     const allowedOrigins = [
         'http://localhost',
          'https://localhost',
+        'http://localhost:8101',
         'http://localhost:3000', 
         'http://localhost:5173', 
         'http://localhost:8100',
