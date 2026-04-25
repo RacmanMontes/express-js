@@ -167,14 +167,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
 }));
 
 // ============================================
-// 3. FRONTEND APPS (CATCH-ALL - THIRD)
+// 3. FRONTEND APP (ADMIN ONLY)
 // ============================================
 
-// Serve customer frontend at root (/)
-app.use('/', express.static(path.join(__dirname, '../customer')));
-
-// Serve admin frontend at /admin
-app.use('/admin', express.static(path.join(__dirname, '../admin')));
+// Serve admin frontend at root (/)
+app.use('/', express.static(path.join(__dirname, '../admin')));
 
 // ============================================
 // 4. ERROR HANDLERS & 404 (LAST RESORT)
@@ -186,7 +183,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-// 404 handler - serves customer frontend for any non-API routes
+// 404 handler - serves admin frontend for any non-API routes
 app.use((req, res) => {
     // If it's an API route, return JSON 404
     if (req.path.startsWith('/api')) {
@@ -196,10 +193,10 @@ app.use((req, res) => {
     else if (req.path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
         res.status(404).send('Image not found');
     }
-    // For all other routes (including customer routes), serve customer frontend
-    // This handles React Router client-side routing for customer
+    // For all other routes, serve admin frontend
+    // This handles React Router client-side routing for admin
     else {
-        res.sendFile(path.join(__dirname, '../customer/index.html'));
+        res.sendFile(path.join(__dirname, '../admin/index.html'));
     }
 });
 
