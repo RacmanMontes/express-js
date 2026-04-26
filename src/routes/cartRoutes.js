@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const { getCart, addToCart, updateCartItem, removeFromCart } = require('../controllers/cartController');
 
+router.get('/public', getPublicCart);
 router.use(protect); // All cart routes require authentication
 
 router.get('/', getCart);

@@ -14,13 +14,13 @@ const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 
-// Security middleware - but allow iframes for images
+
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
     crossOriginEmbedderPolicy: false,
 }));
 
-// Configure CORS properly
+
 const corsOptions = {
     origin: [
         'http://localhost',
@@ -44,7 +44,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Add CORS headers for all responses
+
 app.use((req, res, next) => {
     const allowedOrigins = [
         'http://localhost',
@@ -70,27 +70,24 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
     
-    // Handle preflight requests
+    
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
     next();
 });
 
-// Rate limiting
+
 const limiter = rateLimit({
-    windowMs: 10 * 60 * 1000, // 10 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    windowMs: 10 * 60 * 1000, 
+    max: 100 
 });
 app.use('/api', limiter);
 
-// Body parser
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ============================================
-// 1. API ROUTES (MOST SPECIFIC - FIRST)
-// ============================================
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -98,21 +95,17 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', uploadRoutes);
 
-// Health check
+
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Test endpoint
+
 app.get('/api/test', (req, res) => {
     res.json({ message: 'API is working!' });
 });
 
-// ============================================
-// 2. STATIC FILES (SPECIFIC PATHS - SECOND)
-// ============================================
 
-// Custom middleware for static files with CORS headers
 app.use('/uploads', (req, res, next) => {
     const allowedOrigins = [
         'http://localhost',
@@ -147,11 +140,11 @@ app.use('/uploads', (req, res, next) => {
     next();
 });
 
-// Serve static files (uploaded images)
+
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
     setHeaders: (res, filePath, stat) => {
         const ext = path.extname(filePath).toLowerCase();
-        // Set correct content type based on file extension
+        
         if (ext === '.jpg' || ext === '.jpeg') {
             res.set('Content-Type', 'image/jpeg');
         } else if (ext === '.png') {
@@ -166,43 +159,35 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
     }
 }));
 
-// ============================================
-// 3. FRONTEND APP (ADMIN ONLY)
-// ============================================
 
-// Serve admin frontend at /admin path
 app.use('/admin', express.static(path.join(__dirname, '../admin')));
 
-// Redirect root to /admin
+
 app.get('/', (req, res) => {
     res.redirect('/admin');
 });
 
-// ============================================
-// 4. ERROR HANDLERS & 404 (LAST RESORT)
-// ============================================
 
-// Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-// 404 handler - serves admin frontend for any non-API routes under /admin
+
 app.use((req, res) => {
-    // If it's an API route, return JSON 404
+    
     if (req.path.startsWith('/api')) {
         res.status(404).json({ message: 'API route not found' });
     } 
-    // If it's an image request that wasn't found, return 404
+   
     else if (req.path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
         res.status(404).send('Image not found');
     }
-    // For admin routes, serve admin index.html
+    
     else if (req.path.startsWith('/admin')) {
         res.sendFile(path.join(__dirname, '../admin/index.html'));
     }
-    // For all other routes, redirect to admin
+    
     else {
         res.redirect('/admin');
     }
