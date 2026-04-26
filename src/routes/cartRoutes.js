@@ -1,5 +1,3 @@
-// backend/routes/cartRoutes.js
-
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
@@ -8,13 +6,23 @@ const {
     addToCart, 
     updateCartItem, 
     removeFromCart,
-    getPublicCart   // ← Make sure to import getPublicCart here
+    getPublicCart,
+    getAllCarts,
+    getAllCartItems,
+    getCartSummary,
+    debugDatabase
 } = require('../controllers/cartController');
 
-// PUBLIC ROUTE - No authentication required (for testing)
+// Public routes (no authentication)
 router.get('/public', getPublicCart);
 
-// PROTECTED ROUTES - Authentication required
+// Debug/Admin routes (add authentication middleware in production)
+router.get('/debug', debugDatabase);
+router.get('/all', getAllCarts);
+router.get('/all-items', getAllCartItems);
+router.get('/summary', getCartSummary);
+
+// Protected routes (require login)
 router.use(protect);
 router.get('/', getCart);
 router.post('/add', addToCart);
