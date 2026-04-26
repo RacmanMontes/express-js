@@ -18,6 +18,30 @@ const getCart = async (req, res) => {
     }
 };
 
+// ADD THIS NEW FUNCTION FOR PUBLIC ACCESS (NO AUTH REQUIRED)
+const getPublicCart = async (req, res) => {
+    try {
+        // Use a test user ID (change to an existing user ID from your database)
+        const testUserId = 1; // Make sure this user exists in your database
+        
+        const cart = await Cart.getOrCreateCart(testUserId);
+        const cartItems = await Cart.getCartItems(cart.id);
+        
+        const total = cartItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+        
+        res.json({
+            success: true,
+            id: cart.id,
+            items: cartItems,
+            total: total,
+            message: 'Public cart data (demo mode)'
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 const addToCart = async (req, res) => {
     try {
         const { product_id, quantity = 1 } = req.body;
@@ -68,9 +92,11 @@ const removeFromCart = async (req, res) => {
     }
 };
 
+// UPDATE THE EXPORT to include getPublicCart
 module.exports = {
     getCart,
     addToCart,
     updateCartItem,
-    removeFromCart
+    removeFromCart,
+    getPublicCart  // Add this line
 };
